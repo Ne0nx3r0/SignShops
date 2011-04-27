@@ -18,7 +18,8 @@ public class SignShop extends JavaPlugin{
     private static PluginListener PluginListener = null;
     private static iConomy iConomy = null;
     private static Server Server = null;
-    public static Storage database;
+    public static Storage Storage;
+
     public static Seller[] sellers;
 
     public int MAX_DISTANCE;
@@ -40,18 +41,10 @@ public class SignShop extends JavaPlugin{
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println("["+pdfFile.getName() + "] v" + pdfFile.getVersion() + " ENABLED" );
 
-        //setup database
-        database = new Storage(new File(this.getDataFolder(),"sellers.yml"));
-        database.load();
-        //database.setProperty("test",new Seller());
+        Storage = new Storage(new File(this.getDataFolder(),"sellers.yml"));
     }
 
-//storage
-    public boolean addSeller(Block bSign,ItemStack[] isItems){
-        
 
-        return true;
-    }
 
     //iConomy junk
 

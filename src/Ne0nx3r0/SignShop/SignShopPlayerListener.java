@@ -31,9 +31,10 @@ public class SignShopPlayerListener extends PlayerListener {
                     || event.getClickedBlock().getType() == Material.WALL_SIGN)
                 &&!mClickedSigns.containsKey(event.getPlayer().getName())
                 /* Also need to make sure this sign isn't already hooked up to a chest */
+                /* Also need to make sure the signs 4th line is a number */
             ){
                 mClickedSigns.put(event.getPlayer().getName(),event.getClickedBlock());
-                msg(event.getPlayer(),"Sign location stored");
+                msg(event.getPlayer(),"Sign location stored!");
 
             }else if(event.getClickedBlock().getType() == Material.CHEST
                 && mClickedSigns.containsKey(event.getPlayer().getName())
@@ -42,7 +43,7 @@ public class SignShopPlayerListener extends PlayerListener {
 
                 if(bSign.getType() != Material.WALL_SIGN || bSign.getType() != Material.SIGN_POST){
                     mClickedSigns.remove(event.getPlayer().getName());
-                    msg(event.getPlayer(),"Sign doesn't exist anymore.");
+                    msg(event.getPlayer(),"Then sign you placed doesn't exist anymore.");
                     return;
                 }
 
@@ -50,10 +51,13 @@ public class SignShopPlayerListener extends PlayerListener {
 
                 ItemStack[] isShopItems = cbChest.getInventory().getContents();
 
-                //any checks for the chest items
+                for(ItemStack item : isShopItems){
+                    msg(event.getPlayer(),""+item.getAmount()+" "+item.getType().name());
+                }
 
-                plugin.addSeller(bSign, isShopItems);
+                msg(event.getPlayer(),"has been put up for sale, with a pricetag of "+((Sign) bSign).getLine(3)+"!");
 
+                plugin.Storage.addSeller(bSign,event.getClickedBlock(),isShopItems);
             }
         }
     }
