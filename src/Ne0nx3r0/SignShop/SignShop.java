@@ -8,10 +8,6 @@ import org.bukkit.plugin.PluginManager;
 import com.nijiko.coelho.iConomy.iConomy;
 import org.bukkit.Server;
 import java.io.File;
-import org.bukkit.block.Block;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
-import org.bukkit.Location;
 
 public class SignShop extends JavaPlugin{
     private final SignShopPlayerListener playerListener = new SignShopPlayerListener(this);

@@ -5,26 +5,27 @@ import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 
 public class Seller{
-    private int x;
-    private int y;
-    private int z;
+    public int sx;
+    public int sy;
+    public int sz;
 
-    private int[] items;
-    private int[] amounts;
+    public int cx;
+    public int cy;
+    public int cz;
 
-    public Seller(Block bSign,ItemStack[] isChestItems){
+    public ItemStack[] items;
+
+    public Seller(Block bSign,Block bChest,ItemStack[] isChestItems){
         Location lSign = bSign.getLocation();
+        this.sx = lSign.getBlockX();
+        this.sy = lSign.getBlockY();
+        this.sz = lSign.getBlockZ();
 
-        this.x = lSign.getBlockX();
-        this.y = lSign.getBlockY();
-        this.z = lSign.getBlockZ();
+        Location lChest = bChest.getLocation();
+        this.cx = lChest.getBlockX();
+        this.cy = lChest.getBlockY();
+        this.cz = lChest.getBlockZ();
 
-        this.items = new int[items.length];
-        this.amounts = new int[items.length];
-
-        for(int i = 0;i<isChestItems.length;i++){
-            this.items[i] = isChestItems[i].getTypeId();
-            this.amounts[i] = isChestItems[i].getAmount();
-        }
+        this.items = isChestItems;
     }
 }
