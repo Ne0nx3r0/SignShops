@@ -1,31 +1,46 @@
 package Ne0nx3r0.SignShop;
 
 import org.bukkit.block.Block;
-import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.Bukkit;
 
 public class Seller{
-    public int sx;
-    public int sy;
-    public int sz;
+    public String world;
+    public int x;
+    public int y;
+    public int z;
 
-    public int cx;
-    public int cy;
-    public int cz;
+    public Integer[] items;
+    public Integer[] amounts;
 
-    public ItemStack[] items;
+    public Seller(Block bChest,ItemStack[] isChestItems){
+        this.world = bChest.getWorld().getName();
+        this.x = bChest.getLocation().getBlockX();
+        this.y = bChest.getLocation().getBlockY();
+        this.z = bChest.getLocation().getBlockZ();
 
-    public Seller(Block bSign,Block bChest,ItemStack[] isChestItems){
-        Location lSign = bSign.getLocation();
-        this.sx = lSign.getBlockX();
-        this.sy = lSign.getBlockY();
-        this.sz = lSign.getBlockZ();
+        this.items = new Integer[isChestItems.length];
+        this.amounts = new Integer[isChestItems.length];
 
-        Location lChest = bChest.getLocation();
-        this.cx = lChest.getBlockX();
-        this.cy = lChest.getBlockY();
-        this.cz = lChest.getBlockZ();
+        for(int i=0;i<isChestItems.length;i++){
+            if(isChestItems[i] != null && isChestItems[i].getAmount() > 0){
+                this.items[i] = isChestItems[i].getTypeId();
+                this.amounts[i] = isChestItems[i].getAmount();
+            }
+        }
+    }
 
-        this.items = isChestItems;
+    public ItemStack[] getItems(){
+        ItemStack[] isItems = new ItemStack[items.length];
+
+        for(int i=0;i<items.length;i++){
+            isItems[i] = new ItemStack(items[i],amounts[i]);
+        }
+
+        return isItems;
+    }
+
+    public Block getChest(){
+        return Bukkit.getServer().getWorld(this.world).getBlockAt(this.x,this.y,this.z);
     }
 }

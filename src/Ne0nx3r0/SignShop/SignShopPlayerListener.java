@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.ArrayList;
 import org.bukkit.Location;
+import org.bukkit.event.block.Action;
 
 public class SignShopPlayerListener extends PlayerListener {
     private final SignShop plugin;
@@ -25,23 +26,23 @@ public class SignShopPlayerListener extends PlayerListener {
     }
 
     public void msg(Player player,String msg){
-        player.sendMessage(ChatColor.GRAY+"[SignShop] "+ChatColor.DARK_GRAY+msg);
+        player.sendMessage(ChatColor.GOLD+"[SignShop] "+ChatColor.YELLOW+msg);
     }
 
     @Override
     public void onPlayerInteract(PlayerInteractEvent event){
-        if(event.getItem() != null && event.getItem().getType() == Material.REDSTONE){
+        if(event.getItem() != null 
+        && event.getItem().getType() == Material.REDSTONE
+        && event.getClickedBlock() != null){
             if((event.getClickedBlock().getType() == Material.SIGN_POST
                     || event.getClickedBlock().getType() == Material.WALL_SIGN)
-                /* Also need to make sure this sign isn't already hooked up to a chest */
-                /* Also need to make sure the signs 4th line is a number */
-            ){
+            && plugin.Storage.getSeller(event.getClickedBlock().getLocation()) == null){
                 mClickedSigns.put(event.getPlayer().getName(),event.getClickedBlock());
                 msg(event.getPlayer(),"Sign location stored!");
 
-            }else if(event.getClickedBlock().getType() == Material.CHEST
-                && mClickedSigns.containsKey(event.getPlayer().getName())
-            ){
+            }else if(event.getAction() == Action.LEFT_CLICK_BLOCK
+            && event.getClickedBlock().getType() == Material.CHEST
+            && mClickedSigns.containsKey(event.getPlayer().getName())){
                 Block bSign = mClickedSigns.get(event.getPlayer().getName());
 
                 if(bSign.getType() != Material.WALL_SIGN && bSign.getType() != Material.SIGN_POST){
@@ -57,19 +58,26 @@ public class SignShopPlayerListener extends PlayerListener {
                 //remove extra values
                 List<ItemStack> tempItems = new ArrayList<ItemStack>();
                 for(ItemStack item : isShopItems) {
-                    if(item != null) {
+                    if(item != null && item.getAmount() > 0) {
                         tempItems.add(item);
                     }
                 }
                 isShopItems = tempItems.toArray(new ItemStack[tempItems.size()]);
 
-                for(ItemStack item : isShopItems){
-                    if(item != null){
-                        msg(event.getPlayer(),"+"+item.getAmount()+" "+item.getType().name());
-                    }
+                if(isShopItems.length == 0){
+                    msg(event.getPlayer(),"You have to put some items in the chest to sell!");
+                    return;
                 }
 
-                msg(event.getPlayer(),"have been put up for sale, with a pricetag of "+((Sign) bSign.getState()).getLine(3)+"!");
+                String sForSale = "";
+
+                for(ItemStack item : isShopItems){
+                    sForSale = item.getType().name()+"("+item.getAmount()+"), ";
+                }
+
+                msg(event.getPlayer(),sForSale.substring(0,sForSale.length()-2)
+                        +" have been put up for sale, with a pricetag of "
+                        +((Sign) bSign.getState()).getLine(3)+" "+plugin.iConomy.getBank().getCurrency()+"!");
 
                 plugin.Storage.addSeller(bSign,event.getClickedBlock(),isShopItems);
 
@@ -81,35 +89,87 @@ public class SignShopPlayerListener extends PlayerListener {
         ){
             Sign sSign = (Sign) event.getClickedBlock().getState();
 
-            float iPrice;
+            float fPrice;
 
             //verify the sign has a price
             try{
-                iPrice = Float.parseFloat(sSign.getLine(3));
+                fPrice = Float.parseFloat(sSign.getLine(3));
             }
             catch(NumberFormatException nfe){
-                System.out.println("WHAAAA?!");
                 return;
             }
 
-            if(!mConfirmSigns.containsKey(event.getPlayer().getName())){
-                Seller seller = plugin.Storage.getSeller(event.getClickedBlock().getLocation());
+            String sPlayerName = event.getPlayer().getName();
 
-                if(seller != null){
-                    mConfirmSigns.put(event.getPlayer().getName(),event.getClickedBlock().getLocation());
+            if(!plugin.iConomy.getBank().getAccount(sPlayerName).hasEnough(fPrice)){
+                msg(event.getPlayer(),"You don't have enough money! ( /money )");
+                return;
+            }
 
-                    String sSelling = "Buy ";
+            Seller seller = plugin.Storage.getSeller(event.getClickedBlock().getLocation());
+            if(seller == null){
+                return;
+            }
 
-                    for(ItemStack item : seller.items){
-                        sSelling += item.getType().name()+"("+item.getAmount()+"), ";
-                    }
+            if(event.getAction() != Action.RIGHT_CLICK_BLOCK &&
+             (!mConfirmSigns.containsKey(sPlayerName)
+             ||!mConfirmSigns.get(sPlayerName).equals(event.getClickedBlock().getLocation()))){
+                mConfirmSigns.put(sPlayerName,event.getClickedBlock().getLocation());
 
-                    sSelling = sSelling.substring(0,sSelling.length()-2)+" for "+iPrice+"? (click again to confirm your purchase)";
+                String sSelling = "Buy ";
 
-                    msg(event.getPlayer(),sSelling);
+                for(ItemStack item : seller.getItems()){
+                    sSelling += item.getType().name()+"("+item.getAmount()+"), ";
                 }
+
+                sSelling = sSelling.substring(0,sSelling.length()-2)+" for "+fPrice+"? (Click again to confirm)";
+
+                msg(event.getPlayer(),sSelling);
             }else{
-                msg(event.getPlayer(),"Purchase confirmed! (no code yet :( )");
+                ItemStack[] isItemsToGive = plugin.Storage.getSeller(event.getClickedBlock().getLocation()).getItems();
+
+                Block bChest = seller.getChest();
+
+                if(bChest.getType() != Material.CHEST){
+                    plugin.Storage.removeSeller(event.getClickedBlock().getLocation());
+
+                    msg(event.getPlayer(),"This shop seems to be closed! (Chest was destroyed)");
+
+                    return;
+                }
+
+                Chest cbChest = (Chest) bChest.getState();
+
+                ItemStack[] cbChestCurrentItems = cbChest.getInventory().getContents();
+
+                HashMap<Integer,ItemStack> isItemsLeftover = cbChest.getInventory().removeItem(isItemsToGive);
+
+                if(!isItemsLeftover.isEmpty()){
+                    cbChest.getInventory().setContents(cbChestCurrentItems);
+
+                    mConfirmSigns.remove(sPlayerName);
+
+                    msg(event.getPlayer(),"This shop is out of stock!");
+
+                    return;
+                }
+
+                //todo: ensure they have enough room for all the items, or drop the extras on the ground
+
+                if(fPrice < 0.0f){
+                    fPrice = 0.0f;
+                }
+
+                plugin.iConomy.getBank().getAccount(sPlayerName).subtract(fPrice);
+
+                for(ItemStack item : isItemsToGive){
+                    msg(event.getPlayer(),"Bought "+item.getAmount()+" "+item.getType().name());
+                    event.getPlayer().getInventory().addItem(item);
+                }
+
+                msg(event.getPlayer(),"for "+fPrice+" "+plugin.iConomy.getBank().getCurrency()+"!");
+
+                mConfirmSigns.remove(sPlayerName);
             }
         }
     }

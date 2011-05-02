@@ -22,6 +22,6 @@ public class PluginListener extends ServerListener {
                 }
             }
         }
-        System.out.println("[SignShop] could not link with iConomy.");
+        System.out.println("[SignShop] could not link with iConomy, so ... what's the point? O.o");
     }
 }

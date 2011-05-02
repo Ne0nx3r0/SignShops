@@ -11,8 +11,9 @@ import java.io.File;
 
 public class SignShop extends JavaPlugin{
     private final SignShopPlayerListener playerListener = new SignShopPlayerListener(this);
+    private final SignShopBlockListener blockListener = new SignShopBlockListener(this);
     private static PluginListener PluginListener = null;
-    private static iConomy iConomy = null;
+    public static iConomy iConomy = null;
     private static Server Server = null;
     public static Storage Storage;
 
@@ -33,14 +34,14 @@ public class SignShop extends JavaPlugin{
 
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, PluginListener, Priority.Monitor, this);
         pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
+        pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Low, this);
+        pm.registerEvent(Event.Type.BLOCK_BURN, blockListener, Priority.Low, this);
 
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println("["+pdfFile.getName() + "] v" + pdfFile.getVersion() + " ENABLED" );
 
         Storage = new Storage(new File(this.getDataFolder(),"sellers.yml"));
     }
-
-
 
     //iConomy junk
 
