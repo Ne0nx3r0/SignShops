@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.HashMap;
 import org.bukkit.Location;
 import org.bukkit.Bukkit;
+import java.util.ArrayList;
 
 public class Storage{
     public static Configuration yml;
@@ -35,8 +36,8 @@ public class Storage{
         Location lSign;
         Block bChest;
         ItemStack[] isItems;
-        Integer[] items;
-        Integer[] amounts;
+        ArrayList<Integer> items;
+        ArrayList<Integer> amounts;
         for(String sKey : tempSellers.keySet()){
             sSignLocation = sKey.split("/");
 
@@ -52,15 +53,15 @@ public class Storage{
                 (Integer) tempSeller.get("chesty"),
                 (Integer) tempSeller.get("chestz"));
 
-            items = (Integer[]) tempSeller.get("items");
-            amounts = (Integer[]) tempSeller.get("amounts");
-            isItems = new ItemStack[items.length];
+            items = (ArrayList<Integer>) tempSeller.get("items");
+            amounts = (ArrayList<Integer>) tempSeller.get("amounts");
+            isItems = new ItemStack[items.size()];
 
-            for(int i=0;i<items.length;i++){
-                isItems[i] = new ItemStack(items[i],amounts[i]);
+            for(int i=0;i<items.size();i++){
+                isItems[i] = new ItemStack(items.get(i),amounts.get(i));
             }
 
-            this.sellers.put(lSign, new Seller(bChest,isItems));
+            this.sellers.put(lSign, new Seller((String) tempSeller.get("owner"),bChest,isItems));
         }
     }
 
@@ -82,6 +83,8 @@ public class Storage{
             temp.put("items",seller.items);
             temp.put("amounts",seller.amounts);
 
+            temp.put("owner",seller.owner);
+
             tempSellers.put(lKey.getWorld().getName()+"/"+lKey.getBlockX()+"/"+lKey.getBlockY()+"/"+lKey.getBlockZ(),temp);
         }
         
@@ -89,8 +92,8 @@ public class Storage{
         this.yml.save();
     }
 
-    public void addSeller(Block bSign,Block bChest,ItemStack[] isItems){
-        this.sellers.put(bSign.getLocation(), new Seller(bChest,isItems));
+    public void addSeller(String sPlayer,Block bSign,Block bChest,ItemStack[] isItems){
+        this.sellers.put(bSign.getLocation(), new Seller(sPlayer,bChest,isItems));
         
         this.Save();
     }

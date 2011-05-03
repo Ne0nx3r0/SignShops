@@ -3,6 +3,7 @@ package Ne0nx3r0.SignShop;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 public class Seller{
     public String world;
@@ -13,7 +14,11 @@ public class Seller{
     public Integer[] items;
     public Integer[] amounts;
 
-    public Seller(Block bChest,ItemStack[] isChestItems){
+    public String owner;
+
+    public Seller(String sPlayer,Block bChest,ItemStack[] isChestItems){
+        this.owner = sPlayer;
+
         this.world = bChest.getWorld().getName();
         this.x = bChest.getLocation().getBlockX();
         this.y = bChest.getLocation().getBlockY();

@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.ArrayList;
 import org.bukkit.Location;
 import org.bukkit.event.block.Action;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class SignShopPlayerListener extends PlayerListener {
     private final SignShop plugin;
@@ -72,14 +74,14 @@ public class SignShopPlayerListener extends PlayerListener {
                 String sForSale = "";
 
                 for(ItemStack item : isShopItems){
-                    sForSale = item.getType().name()+"("+item.getAmount()+"), ";
+                    sForSale += item.getAmount()+" "+formatMaterialName(item.getType().name())+", ";
                 }
 
                 msg(event.getPlayer(),sForSale.substring(0,sForSale.length()-2)
                         +" have been put up for sale, with a pricetag of "
                         +((Sign) bSign.getState()).getLine(3)+" "+plugin.iConomy.getBank().getCurrency()+"!");
 
-                plugin.Storage.addSeller(bSign,event.getClickedBlock(),isShopItems);
+                plugin.Storage.addSeller(event.getPlayer().getName(),bSign,event.getClickedBlock(),isShopItems);
 
                 mClickedSigns.remove(event.getPlayer().getName());
             }
@@ -119,12 +121,11 @@ public class SignShopPlayerListener extends PlayerListener {
                 String sSelling = "Buy ";
 
                 for(ItemStack item : seller.getItems()){
-                    sSelling += item.getType().name()+"("+item.getAmount()+"), ";
+                    sSelling += item.getAmount()+" "+formatMaterialName(item.getType().name())+", ";
                 }
 
-                sSelling = sSelling.substring(0,sSelling.length()-2)+" for "+fPrice+"? (Click again to confirm)";
-
-                msg(event.getPlayer(),sSelling);
+                msg(event.getPlayer(),sSelling.substring(0,sSelling.length()-2)+" for "+fPrice+" "+plugin.iConomy.getBank().getCurrency()+"?");
+                msg(event.getPlayer(),"Click again to confirm)");
             }else{
                 ItemStack[] isItemsToGive = plugin.Storage.getSeller(event.getClickedBlock().getLocation()).getItems();
 
@@ -162,15 +163,44 @@ public class SignShopPlayerListener extends PlayerListener {
 
                 plugin.iConomy.getBank().getAccount(sPlayerName).subtract(fPrice);
 
-                for(ItemStack item : isItemsToGive){
-                    msg(event.getPlayer(),"Bought "+item.getAmount()+" "+item.getType().name());
-                    event.getPlayer().getInventory().addItem(item);
+                if(seller.owner != null){
+                    plugin.iConomy.getBank().getAccount(seller.owner).add(fPrice);
                 }
 
-                msg(event.getPlayer(),"for "+fPrice+" "+plugin.iConomy.getBank().getCurrency()+"!");
+                String sBuying = "Bought ";
+
+                for(ItemStack item : isItemsToGive){
+                    sBuying += item.getAmount()+" "+formatMaterialName(item.getType().name())+", ";
+                    event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(),item);
+                }
+
+                msg(event.getPlayer(),
+                    sBuying.substring(0,sBuying.length()-2)
+                    +" for "+fPrice+" "
+                    +plugin.iConomy.getBank().getCurrency()+"!");
+
+                Player[] players = event.getPlayer().getServer().getOnlinePlayers();
+
+                for(Player player : players){
+                    if(player.getName() == seller.owner){
+                        msg(player,ChatColor.GREEN+event.getPlayer().getName()+" has paid you "+fPrice+" "+plugin.iConomy.getBank().getCurrency()+"!");
+                    }
+                }
 
                 mConfirmSigns.remove(sPlayerName);
             }
         }
+    }
+
+    public static String formatMaterialName(String sMaterial){
+        sMaterial = sMaterial.replace("_"," ");
+        Pattern p = Pattern.compile("(^|\\W)([a-z])");
+        Matcher m = p.matcher(sMaterial.toLowerCase());
+        StringBuffer sb = new StringBuffer(sMaterial.length());
+        while(m.find()) {
+                m.appendReplacement(sb, m.group(1) + m.group(2).toUpperCase() );
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 }
