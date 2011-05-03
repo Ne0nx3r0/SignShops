@@ -17,18 +17,19 @@ public class SignShop extends JavaPlugin{
     private static Server Server = null;
     public static Storage Storage;
 
-    public static Seller[] sellers;
-
-    public int MAX_DISTANCE;
-
     public void onDisable(){
+        Storage.Save();
         System.out.println("[SignShop] Disabled");
     }
 
     public void onEnable(){
-        Server = getServer();
-
+        //enable iConomy
         PluginListener = new PluginListener();
+
+        if(iConomy == null){
+            System.out.println("[SignShop] iConomy not found, halting.");
+            return;
+        }
 
         PluginManager pm = getServer().getPluginManager();
 
@@ -38,13 +39,12 @@ public class SignShop extends JavaPlugin{
         pm.registerEvent(Event.Type.BLOCK_BURN, blockListener, Priority.Low, this);
 
         PluginDescriptionFile pdfFile = this.getDescription();
-        System.out.println("["+pdfFile.getName() + "] v" + pdfFile.getVersion() + " ENABLED" );
+        System.out.println("[SignShop] v" + pdfFile.getVersion() + " ENABLED" );
 
         Storage = new Storage(new File(this.getDataFolder(),"sellers.yml"));
     }
 
-    //iConomy junk
-
+    //iConomy stuff
     public static Server getBukkitServer() {
         return Server;
     }

@@ -155,8 +155,6 @@ public class SignShopPlayerListener extends PlayerListener {
                     return;
                 }
 
-                //todo: ensure they have enough room for all the items, or drop the extras on the ground
-
                 if(fPrice < 0.0f){
                     fPrice = 0.0f;
                 }

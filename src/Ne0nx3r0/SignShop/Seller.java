@@ -3,7 +3,6 @@ package Ne0nx3r0.SignShop;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
 public class Seller{
     public String world;
