@@ -26,11 +26,6 @@ public class SignShop extends JavaPlugin{
         //enable iConomy
         PluginListener = new PluginListener();
 
-        if(iConomy == null){
-            System.out.println("[SignShop] iConomy not found, halting.");
-            return;
-        }
-
         PluginManager pm = getServer().getPluginManager();
 
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, PluginListener, Priority.Monitor, this);

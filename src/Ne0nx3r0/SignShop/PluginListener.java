@@ -1,6 +1,5 @@
 package Ne0nx3r0.SignShop;
 
-import org.bukkit.event.server.PluginEvent;
 import org.bukkit.event.server.ServerListener;
 
 import com.nijiko.coelho.iConomy.iConomy;
@@ -10,7 +9,7 @@ public class PluginListener extends ServerListener {
     public PluginListener() { }
 
 //    @Override
-    public void onEnabled(PluginEvent event) {
+    public void onEnable() {
         if(SignShop.getiConomy() == null){
             Plugin iConomy = SignShop.getBukkitServer().getPluginManager().getPlugin("iConomy");
 
