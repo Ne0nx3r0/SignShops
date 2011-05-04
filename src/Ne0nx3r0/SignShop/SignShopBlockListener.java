@@ -17,6 +17,8 @@ public class SignShopBlockListener extends BlockListener{
         if(event.getBlock().getType() == Material.WALL_SIGN
         || event.getBlock().getType() == Material.SIGN_POST){
             plugin.Storage.removeSeller(event.getBlock().getLocation());
+        }else if(event.getBlock().getType() == Material.CHEST){
+            //todo: remove signs when the chest is destroyed, need reverse lookup
         }
     }
 
@@ -25,6 +27,8 @@ public class SignShopBlockListener extends BlockListener{
         if(event.getBlock().getType() == Material.WALL_SIGN
         || event.getBlock().getType() == Material.SIGN_POST){
             plugin.Storage.removeSeller(event.getBlock().getLocation());
+        }else if(event.getBlock().getType() == Material.CHEST){
+            //todo: remove signs when the chest is destroyed, need reverse lookup
         }
     }
 }
