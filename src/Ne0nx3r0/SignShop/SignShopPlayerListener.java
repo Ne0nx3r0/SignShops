@@ -14,9 +14,10 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.ArrayList;
 import org.bukkit.Location;
-import org.bukkit.event.block.Action;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import org.bukkit.Bukkit;
+import org.bukkit.event.block.Action;
 
 public class SignShopPlayerListener extends PlayerListener {
     private final SignShop plugin;
@@ -27,8 +28,22 @@ public class SignShopPlayerListener extends PlayerListener {
         this.plugin = instance;
     }
 
+    //msg a player object
     public void msg(Player player,String msg){
         player.sendMessage(ChatColor.GOLD+"[SignShop] "+ChatColor.YELLOW+msg);
+    }
+
+    //look up a player by player.getName()
+    public boolean msg(String sPlayer,String msg){
+        Player[] players = Bukkit.getServer().getOnlinePlayers();
+
+        for(Player player : players){
+            if(player.getName().equals(sPlayer)){
+                msg(player,msg);
+                return true;
+            }
+        }
+        return false;
     }
 
     public static String stringFormat(Material material){
@@ -46,6 +61,8 @@ public class SignShopPlayerListener extends PlayerListener {
         return sb.toString();
     }
 
+
+
     @Override
     public void onPlayerInteract(PlayerInteractEvent event){
         if(event.getClickedBlock() == null){
@@ -53,12 +70,12 @@ public class SignShopPlayerListener extends PlayerListener {
         }
 
         Block bClicked = event.getClickedBlock();
-
+//clicked a sign with redstone
         if(event.getItem() != null && event.getItem().getType() == Material.REDSTONE){
             if(bClicked.getType() == Material.SIGN_POST
             || bClicked.getType() == Material.WALL_SIGN){
 
-                String[] sLines = ((Sign) bClicked).getLines();
+                String[] sLines = ((Sign) bClicked.getState()).getLines();
 
                 try{
                     float fPrice = Float.parseFloat(sLines[3]);
@@ -67,27 +84,28 @@ public class SignShopPlayerListener extends PlayerListener {
                     return;
                 }
 
-                if(!sLines[0].equalsIgnoreCase("[Buy]")
-                || !sLines[0].equalsIgnoreCase("[Sell]")
-                || !sLines[0].equalsIgnoreCase("[Donate]")){
+                if(!sLines[0].equals("[Buy]")
+                && !sLines[0].equals("[Sell]")
+                && !sLines[0].equals("[Donate]")){
                     return;
                 }
 
                 // verify this isn't a shop already
                 if(plugin.Storage.getSeller(event.getClickedBlock().getLocation()) == null){
-
                     mClicks.put(event.getPlayer().getName(),event.getClickedBlock().getLocation());
 
                     msg(event.getPlayer(),"Sign location stored!");
 
                     return;
                 }
-            }else if(event.getClickedBlock().getType() == Material.CHEST
+//left clicked a chest and has already clicked a sign
+            }else if(event.getAction() == Action.LEFT_CLICK_BLOCK
+            && event.getClickedBlock().getType() == Material.CHEST
             && mClicks.containsKey(event.getPlayer().getName())){
-                
+
                 Block bSign = mClicks.get(event.getPlayer().getName()).getBlock();
 
-                String[] sLines = ((Sign) bClicked).getLines();
+                String[] sLines = ((Sign) bSign.getState()).getLines();
 
                 try{
                     float fPrice = Float.parseFloat(sLines[3]);
@@ -97,198 +115,144 @@ public class SignShopPlayerListener extends PlayerListener {
                     return;
                 }
 
-                if(!sLines[0].equalsIgnoreCase("[Buy]")
-                || !sLines[0].equalsIgnoreCase("[Sell]")
-                || !sLines[0].equalsIgnoreCase("[Donate]")){
+                if(!sLines[0].equals("[Buy]")
+                && !sLines[0].equals("[Sell]")
+                && !sLines[0].equals("[Donate]")){
                     msg(event.getPlayer(),"The sign you clicked no longer has a valid operation!");
                     return;
                 }
 
-                if(sLines[0] != "[Buy]" || sLines[0] != "[Sell]" || sLines[0] != "[Donate]"){
-                    return;
-                }
-
-                //next up, check what's in the chest and start prepping
-            }
-        }
-        else if(event.getClickedBlock().getType() == Material.SIGN_POST
-        || event.getClickedBlock().getType() == Material.WALL_SIGN){
-            Sign bSign = (Sign) event.getClickedBlock().getState();
-            String[] sLines = bSign.getLines();
-
-            if(sLines[0] == "[Buy]" || sLines[0] == "[Sell]" || sLines[0] == "[Donate]" ){
-                //todo: buy/sell/donate actions
-            }
-        }
-    }
-
-
-
-
-/*
-using item
-redstone
-clicked block
-	was sign
-
-	was chest
-
-clicked block
-	was sign
-	sign has donate/buy/sell*/
-
-
-
-    public void onPlayerInteract2(PlayerInteractEvent event){
-        if(event.getItem() != null
-        && event.getItem().getType() == Material.REDSTONE
-        && event.getClickedBlock() != null){
-            if((event.getClickedBlock().getType() == Material.SIGN_POST
-                    || event.getClickedBlock().getType() == Material.WALL_SIGN)
-            && plugin.Storage.getSeller(event.getClickedBlock().getLocation()) == null){
-              //  mClickedSigns.put(event.getPlayer().getName(),event.getClickedBlock());
-                //msg(event.getPlayer(),"Sign location stored!");
-
-            }else if(event.getAction() == Action.LEFT_CLICK_BLOCK
-            && event.getClickedBlock().getType() == Material.CHEST
-            && mClickedSigns.containsKey(event.getPlayer().getName())){
-                Block bSign = mClickedSigns.get(event.getPlayer().getName());
-
-                if(bSign.getType() != Material.WALL_SIGN && bSign.getType() != Material.SIGN_POST){
-                    mClickedSigns.remove(event.getPlayer().getName());
-                    msg(event.getPlayer(),"The sign doesn't exist anymore.");
+                if(!sLines[0].equals("[Buy]")
+                && !sLines[0].equals("[Sell]")
+                && !sLines[0].equals("[Donate]")){
                     return;
                 }
 
                 Chest cbChest = (Chest) event.getClickedBlock().getState();
-
-                ItemStack[] isShopItems = cbChest.getInventory().getContents();
+                ItemStack[] isChestItems = cbChest.getInventory().getContents();
 
                 //remove extra values
                 List<ItemStack> tempItems = new ArrayList<ItemStack>();
-                for(ItemStack item : isShopItems) {
+                for(ItemStack item : isChestItems) {
                     if(item != null && item.getAmount() > 0) {
                         tempItems.add(item);
                     }
                 }
-                isShopItems = tempItems.toArray(new ItemStack[tempItems.size()]);
+                isChestItems = tempItems.toArray(new ItemStack[tempItems.size()]);
 
-                if(isShopItems.length == 0){
-                    msg(event.getPlayer(),"You have to put some items in the chest to sell!");
+                if(isChestItems.length == 0){
+                    msg(event.getPlayer(),"Chest is empty!");
                     return;
                 }
 
-                String sForSale = "";
-
-                for(ItemStack item : isShopItems){
-                    sForSale += item.getAmount()+" "+formatMaterialName(item.getType().name())+", ";
+                String sItemsString = "";
+                for(ItemStack item : isChestItems){
+                    sItemsString += item.getAmount()+" "+stringFormat(item.getType())+", ";
                 }
 
-                msg(event.getPlayer(),sForSale.substring(0,sForSale.length()-2)+" have been put up for sale!");
+                String sOperation = "put for sell";
 
-                plugin.Storage.addSeller(event.getPlayer().getName(),bSign,event.getClickedBlock(),isShopItems);
+                if(sLines[0].equals("[Sell]")){
+                    sOperation = "put for users to sell you";
+                }else if(sLines[0].equals("[Donate]")){
+                    sOperation = "set as donations";
+                }
 
-                mClickedSigns.remove(event.getPlayer().getName());
+                msg(event.getPlayer(),sItemsString.substring(0,sItemsString.length()-2)+" have been "+sOperation+"!");
+
+                plugin.Storage.addSeller(event.getPlayer().getName(),bSign,event.getClickedBlock(),isChestItems);
+
+                mClicks.remove(event.getPlayer().getName());
+
+                return;
             }
-        }else if(event.getClickedBlock() != null &&
-             (event.getClickedBlock().getType() == Material.SIGN_POST
-            ||event.getClickedBlock().getType() == Material.WALL_SIGN)
-        ){
-            Sign sSign = (Sign) event.getClickedBlock().getState();
+        }
+        else if(bClicked.getType() == Material.SIGN_POST
+        || bClicked.getType() == Material.WALL_SIGN){
+            Sign sbSign = (Sign) bClicked.getState();
+            String[] sLines = sbSign.getLines();
 
+//verify the sign operation
+            if(!sLines[0].equals("[Buy]")
+            && !sLines[0].equals("[Sell]")
+            && !sLines[0].equals("[Donate]")){
+                return;
+            }
+
+//verify the sign has a price
             float fPrice;
-
-            //verify the sign has a price
-            try{
-                fPrice = Float.parseFloat(sSign.getLine(3));
-            }
-            catch(NumberFormatException nfe){
-                return;
-            }
-
-            String sPlayerName = event.getPlayer().getName();
-
-            if(!plugin.iConomy.getAccount(sPlayerName).getHoldings().hasEnough(fPrice)){
-                msg(event.getPlayer(),"You don't have enough money! ( /money )");
-                return;
+            if(sLines[0].equals("[Donate]")){
+                fPrice = 0.0f;
+            }else{
+                try{
+                    fPrice = Float.parseFloat(sLines[3]);
+                    if(fPrice < 0.0f){
+                        fPrice = 0.0f;
+                    }
+                }
+                catch(NumberFormatException nfe){
+                    return;
+                }
             }
 
+//verify the sign has a seller
             Seller seller = plugin.Storage.getSeller(event.getClickedBlock().getLocation());
+
             if(seller == null){
                 return;
             }
 
-            if(event.getAction() != Action.RIGHT_CLICK_BLOCK &&
-             (!mConfirmSigns.containsKey(sPlayerName)
-             ||!mConfirmSigns.get(sPlayerName).equals(event.getClickedBlock().getLocation()))){
-                mConfirmSigns.put(sPlayerName,event.getClickedBlock().getLocation());
+            ItemStack[] isItems = seller.getItems();
 
-                String sSelling = "Buy ";
-
-                for(ItemStack item : seller.getItems()){
-                    sSelling += item.getAmount()+" "+formatMaterialName(item.getType().name())+", ";
-                }
-
-                msg(event.getPlayer(),sSelling.substring(0,sSelling.length()-2)+" for "+plugin.iConomy.format(fPrice)+"?");
-                msg(event.getPlayer(),"Click again to confirm)");
-            }else{
-                ItemStack[] isItemsToGive = plugin.Storage.getSeller(event.getClickedBlock().getLocation()).getItems();
-
-                Block bChest = seller.getChest();
-
-                if(bChest.getType() != Material.CHEST){
-                    plugin.Storage.removeSeller(event.getClickedBlock().getLocation());
-
-                    msg(event.getPlayer(),"This shop seems to be closed! (Chest was destroyed)");
+            if(sLines[0].equals("[Buy]")){
+//verify the player has enough money
+                if(!plugin.iConomy.getAccount(event.getPlayer().getName()).getHoldings().hasEnough(fPrice)){
+                    msg(event.getPlayer(),"You don't have "+plugin.iConomy.format(fPrice)+"!");
 
                     return;
                 }
 
-                Chest cbChest = (Chest) bChest.getState();
-
-                ItemStack[] cbChestCurrentItems = cbChest.getInventory().getContents();
-
-                HashMap<Integer,ItemStack> isItemsLeftover = cbChest.getInventory().removeItem(isItemsToGive);
-
-                if(!isItemsLeftover.isEmpty()){
-                    cbChest.getInventory().setContents(cbChestCurrentItems);
-
-                    mConfirmSigns.remove(sPlayerName);
+//verify the chest has the items it's selling
+                Chest cbChest = (Chest) seller.getChest().getState();
+                ItemStack[] isChestTemp = cbChest.getInventory().getContents();
+                
+                if(!(cbChest.getInventory().removeItem(isItems)).isEmpty()){
+                    //reset chest inventory
+                    cbChest.getInventory().setContents(isChestTemp);
 
                     msg(event.getPlayer(),"This shop is out of stock!");
 
                     return;
                 }
 
-                if(fPrice < 0.0f){
-                    fPrice = 0.0f;
-                }
-
-                plugin.iConomy.getAccount(sPlayerName).getHoldings().subtract(fPrice);
+//exchange money
+                plugin.iConomy.getAccount(event.getPlayer().getName()).getHoldings().subtract(fPrice);
 
                 if(seller.owner != null){
                     plugin.iConomy.getAccount(seller.owner).getHoldings().add(fPrice);
+                    msg(seller.owner,ChatColor.GREEN+event.getPlayer().getName()
+                        +" has paid you "+plugin.iConomy.format(fPrice)+" for purchased goods!");
                 }
 
+//give the items, note the items were already removed from the chest
                 String sBuying = "";
-                for(ItemStack item : isItemsToGive){
-                    sBuying += item.getAmount()+" "+formatMaterialName(item.getType().name())+", ";
+                for(ItemStack item : isItems){
+                    sBuying += item.getAmount()+" "+stringFormat(item.getType())+", ";
                     event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(),item);
                 }
 
-                msg(event.getPlayer(),
-                    "Bought "+sBuying.substring(0,sBuying.length()-2)
+//confirmation messages
+                msg(event.getPlayer(),"Bought "+sBuying.substring(0,sBuying.length()-2)
                     +" for "+plugin.iConomy.format(fPrice)+"!");
 
                 Player[] players = event.getPlayer().getServer().getOnlinePlayers();
 
-                for(Player player : players){
-                    if(player.getName() == seller.owner){
-                        msg(player,ChatColor.GREEN+event.getPlayer().getName()+" has paid you "+plugin.iConomy.format(fPrice)+"!");
-                    }
-                }
+                return;
 
-                mConfirmSigns.remove(sPlayerName);
+            }else if(sLines[0].equals("[Sell]")){
+                return;
+            }else if(sLines[0].equals("[Donate]")){
+                return;
             }
         }
     }
