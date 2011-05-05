@@ -22,7 +22,7 @@ import org.bukkit.event.block.Action;
 public class SignShopPlayerListener extends PlayerListener {
     private final SignShop plugin;
     private static Map<String, Location> mClicks  = new HashMap<String, Location>();
-    private static Map<String,Location> mConfirmSigns = new HashMap<String,Location>();
+    private static Map<String,Location> mConfirms = new HashMap<String,Location>();
 
     public SignShopPlayerListener(SignShop instance){
         this.plugin = instance;
@@ -169,6 +169,38 @@ public class SignShopPlayerListener extends PlayerListener {
         }
         else if(bClicked.getType() == Material.SIGN_POST
         || bClicked.getType() == Material.WALL_SIGN){
+//left clicked a block and isn't confirming
+            if(event.getAction() == Action.LEFT_CLICK_BLOCK
+            && (!mConfirms.containsKey(event.getPlayer().getName())
+            || mConfirms.get(event.getPlayer().getName()).getBlock() != bClicked)){
+                Seller seller = plugin.Storage.getSeller(bClicked.getLocation());
+
+//todo: setup donate/sell
+                String sItems = "";
+                for(ItemStack item: seller.getItems()){
+                    sItems += item.getAmount()+" "+stringFormat(item.getType())+", ";
+                }
+
+                float fPrice;
+                try{
+                    fPrice = Float.parseFloat(((Sign) bClicked.getState()).getLine(3));
+                    if(fPrice < 0.0f){
+                        fPrice = 0.0f;
+                    }
+                }
+                catch(NumberFormatException nfe){
+                    return;
+                }
+
+                msg(event.getPlayer(),"Buy "+sItems.substring(0,sItems.length()-2)+" for "+plugin.iConomy.format(fPrice)+"?");
+                msg(event.getPlayer(),"(Click again to confirm)");
+
+                mConfirms.put(event.getPlayer().getName(),event.getClickedBlock().getLocation());
+
+                return;
+            }
+
+
             Sign sbSign = (Sign) bClicked.getState();
             String[] sLines = sbSign.getLines();
 
@@ -246,14 +278,11 @@ public class SignShopPlayerListener extends PlayerListener {
                     +" for "+plugin.iConomy.format(fPrice)+"!");
 
                 Player[] players = event.getPlayer().getServer().getOnlinePlayers();
-
-                return;
-
             }else if(sLines[0].equals("[Sell]")){
-                return;
             }else if(sLines[0].equals("[Donate]")){
-                return;
             }
+
+            mConfirms.remove(event.getPlayer().getName());
         }
     }
 }
