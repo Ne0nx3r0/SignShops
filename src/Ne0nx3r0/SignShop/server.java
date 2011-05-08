@@ -19,7 +19,7 @@ public class server extends ServerListener {
         if (plugin.iConomy != null) {
             if (event.getPlugin().getDescription().getName().equals("iConomy")) {
                 plugin.iConomy = null;
-                System.out.println("[MyPlugin] un-hooked from iConomy.");
+                System.out.println("[SignShop] un-hooked from iConomy.");
             }
         }
     }
@@ -32,7 +32,7 @@ public class server extends ServerListener {
             if (iConomy != null) {
                 if (iConomy.isEnabled()) {
                     plugin.iConomy = (iConomy)iConomy;
-                    System.out.println("[MyPlugin] hooked into iConomy.");
+                    System.out.println("[SignShop] hooked into iConomy.");
                 }
             }
         }

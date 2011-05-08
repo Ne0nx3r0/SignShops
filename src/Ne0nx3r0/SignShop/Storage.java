@@ -8,6 +8,7 @@ import java.util.HashMap;
 import org.bukkit.Location;
 import org.bukkit.Bukkit;
 import java.util.ArrayList;
+import org.bukkit.Material;
 
 public class Storage{
     public static Configuration yml;
@@ -38,13 +39,23 @@ public class Storage{
         ItemStack[] isItems;
         ArrayList<Integer> items;
         ArrayList<Integer> amounts;
+        ArrayList<String> datas;
+        ArrayList<Integer> durabilities;
         for(String sKey : tempSellers.keySet()){
             sSignLocation = sKey.split("/");
 
-            lSign = Bukkit.getServer().getWorld(sSignLocation[0]).getBlockAt(
+            Block bSign = Bukkit.getServer().getWorld(sSignLocation[0]).getBlockAt(
                 Integer.parseInt(sSignLocation[1]),
                 Integer.parseInt(sSignLocation[2]),
-                Integer.parseInt(sSignLocation[3])).getLocation();
+                Integer.parseInt(sSignLocation[3]));
+
+            if(bSign.getType() != Material.SIGN_POST && bSign.getType() != Material.WALL_SIGN){
+                //if no longer valid, remove this sign
+                System.out.println("Removed invalid signshop");
+                continue;
+            }
+
+            lSign = bSign.getLocation();
 
             tempSeller = (Map<String,Object>) tempSellers.get(sKey);
 
@@ -53,12 +64,22 @@ public class Storage{
                 (Integer) tempSeller.get("chesty"),
                 (Integer) tempSeller.get("chestz"));
 
+            datas = (ArrayList<String>) tempSeller.get("datas");
             items = (ArrayList<Integer>) tempSeller.get("items");
             amounts = (ArrayList<Integer>) tempSeller.get("amounts");
+            durabilities = (ArrayList<Integer>) tempSeller.get("durabilities");
+            
             isItems = new ItemStack[items.size()];
 
             for(int i=0;i<items.size();i++){
                 isItems[i] = new ItemStack(items.get(i),amounts.get(i));
+
+                if(datas != null && datas.get(i) != null){
+                    isItems[i].getData().setData(new Byte(datas.get(i)));
+                }
+                if(durabilities != null && durabilities.get(i) != null){
+                    isItems[i].setDurability(durabilities.get(i).shortValue());
+                }
             }
 
             this.sellers.put(lSign, new Seller((String) tempSeller.get("owner"),bChest,isItems));
@@ -82,6 +103,15 @@ public class Storage{
 
             temp.put("items",seller.items);
             temp.put("amounts",seller.amounts);
+            temp.put("durabilities",seller.durabilities);
+
+            String[] sDatas = new String[seller.datas.length];
+            for(int i=0;i<seller.datas.length;i++){
+                if(sDatas[i] != null){
+                    sDatas[i] = Byte.toString(seller.datas[i]);
+                }
+            }
+            temp.put("datas", sDatas);
 
             temp.put("owner",seller.owner);
 
