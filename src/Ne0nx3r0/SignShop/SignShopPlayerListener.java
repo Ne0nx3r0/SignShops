@@ -460,7 +460,7 @@ public class SignShopPlayerListener extends PlayerListener {
             }
 
             msg(event.getPlayer(),getTransactionPlayerMessage(sOperation, fPrice, sItems));
-            msg(seller.owner,getTransactionOwnerMessage(sOperation, fPrice, sItems,seller.owner));
+            msg(seller.owner,getTransactionOwnerMessage(sOperation, fPrice, sItems,event.getPlayer().getName()));
         }
     }
 }
