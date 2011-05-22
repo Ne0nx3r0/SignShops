@@ -26,7 +26,6 @@ public class SignShopPlayerListener extends PlayerListener {
     private static Map<String, Location> mClicks  = new HashMap<String, Location>();
     private static Map<String,Location> mConfirms = new HashMap<String,Location>();
 
-
     private static Map<String,List> operations = new HashMap<String,List>();
 
     private byte takePlayerMoney = 1;
@@ -44,76 +43,31 @@ public class SignShopPlayerListener extends PlayerListener {
     public SignShopPlayerListener(SignShop instance){
         this.plugin = instance;
 
-        operations.put("[Buy]",Arrays.asList(takePlayerMoney,takeShopItems,giveOwnerMoney,givePlayerItems));
-        operations.put("[Sell]",Arrays.asList(takePlayerItems,takeOwnerMoney,giveShopItems,givePlayerMoney));
-        operations.put("[Donate]",Arrays.asList(takePlayerItems,giveShopItems));
-        operations.put("[Slot]",Arrays.asList(takePlayerMoney,giveOwnerMoney,givePlayerRandomItem));
-        //operations.put("[Redstone]",Arrays.asList(takePlayerMoney,activateLever));
-        operations.put("[iSell]",Arrays.asList(givePlayerMoney,takePlayerItems,playerIsOp));
-        operations.put("[iBuy]",Arrays.asList(takePlayerMoney,givePlayerItems,playerIsOp));
+        operations.put("Buy",Arrays.asList(takePlayerMoney,takeShopItems,giveOwnerMoney,givePlayerItems));
+        operations.put("Sell",Arrays.asList(takePlayerItems,takeOwnerMoney,giveShopItems,givePlayerMoney));
+        operations.put("Donate",Arrays.asList(takePlayerItems,giveShopItems));
+        operations.put("Slot",Arrays.asList(takePlayerMoney,giveOwnerMoney,givePlayerRandomItem));
+        operations.put("Redstone",Arrays.asList(takePlayerMoney,activateLever));
+        operations.put("iSell",Arrays.asList(givePlayerMoney,takePlayerItems,playerIsOp));
+        operations.put("iBuy",Arrays.asList(takePlayerMoney,givePlayerItems,playerIsOp));
     }
 
-    //quick and dirty
-    private String getSetupMessage(String sOperation,float fPrice,String sItems){
-        String sMessage = "";
-
-             if(sOperation.equals("[Buy]") || sOperation.equals("[iBuy]")) sMessage = "!items put up for sale for a price of !price!";
-        else if(sOperation.equals("[Sell]") || sOperation.equals("[iSell]")) sMessage = "Bounty of !price offered for !items!";
-        else if(sOperation.equals("[Donate]")) sMessage = "Donation box setup for !items!";
-        else if(sOperation.equals("[Slot]")) sMessage = "Slot machine setup for !price a play!";
-        else if(sOperation.equals("[Redstone]")) sMessage = "Redstone activator setup for !price a click!";
-
-        return sMessage
-            .replace("!price",plugin.iConomy.format(fPrice))
-            .replace("!items",sItems);
+    private String getOperation(String sSignOperation){
+        return sSignOperation.substring(1,sSignOperation.length()-1);
     }
 
-    private String getConfirmationMessage(String sOperation,float fPrice,String sItems){
-        String sMessage = "";
-
-             if(sOperation.equals("[Buy]") || sOperation.equals("[iBuy]")) sMessage = "Buy !items for !price?";
-        else if(sOperation.equals("[Sell]") || sOperation.equals("[iSell]")) sMessage = "Sell !items for !price?";
-        else if(sOperation.equals("[Donate]")) sMessage = "Donate !items?";
-        else if(sOperation.equals("[Slot]")) sMessage = "Purchase a random item from this shop for !price?";
-        else if(sOperation.equals("[Redstone]")) sMessage = "Activate this sign for !price?";
-
-        return sMessage
-            .replace("!price",plugin.iConomy.format(fPrice))
-            .replace("!items",sItems);
-    }
-
-    private String getTransactionPlayerMessage(String sOperation,float fPrice,String sItems){
-        String sMessage = "";
-
-             if(sOperation.equals("[Buy]") || sOperation.equals("[iBuy]")) sMessage = "Bought !items for !price!";
-        else if(sOperation.equals("[Sell]") || sOperation.equals("[iSell]")) sMessage = "Sold !items for !price!";
-        else if(sOperation.equals("[Donate]")) sMessage = "Donated !items!";
-        else if(sOperation.equals("[Slot]")) sMessage = "Bought a random item!";
-        else if(sOperation.equals("[Redstone]")) sMessage = "Activated the sign!";
-
-        return sMessage
-            .replace("!price",plugin.iConomy.format(fPrice))
-            .replace("!items",sItems);
-    }
-
-    private String getTransactionOwnerMessage(String sOperation,float fPrice,String sItems,String sOwner){
-        String sMessage = "";
-
-             if(sOperation.equals("[Buy]") || sOperation.equals("[iBuy]")) sMessage = "!player Bought !price! of items from you!";
-        else if(sOperation.equals("[Sell]") || sOperation.equals("[iSell]")) sMessage = "!player sold you !items for !price!";
-        else if(sOperation.equals("[Donate]")) sMessage = "!player donated !items to you!";
-        else if(sOperation.equals("[Slot]")) sMessage = "!player played one of your slot machines!";
-        else if(sOperation.equals("[Redstone]")) sMessage = "!player activated your redstone sign!";
-
-        return ChatColor.GREEN+sMessage
-            .replace("!price",plugin.iConomy.format(fPrice))
-            .replace("!items",sItems)
-            .replace("!player",sOwner);
+    private String getMessage(String sType,String sOperation,String sItems,float fPrice,String sCustomer,String sOwner){
+        return plugin.Messages.get(sType).get(sOperation)
+            .replace("\\!","!")
+            .replace("!price", plugin.iConomy.format(fPrice))
+            .replace("!items", sItems)
+            .replace("!customer", sCustomer)
+            .replace("!owner", sOwner);
     }
 
     //msg a player object
     private void msg(Player player,String msg){
-        player.sendMessage(ChatColor.GOLD+"[SignShop] "+ChatColor.YELLOW+msg);
+        player.sendMessage(ChatColor.GOLD+"[SignShop] "+ChatColor.WHITE+msg);
     }
 
     //look up a player by player.getName()
@@ -144,11 +98,10 @@ public class SignShopPlayerListener extends PlayerListener {
         return sb.toString();
     }
 
-
-
     @Override
     public void onPlayerInteract(PlayerInteractEvent event){
-        if(event.getClickedBlock() == null){
+        if(event.getClickedBlock() == null
+        || event.isCancelled()){
             return;
         }
 
@@ -160,14 +113,30 @@ public class SignShopPlayerListener extends PlayerListener {
 
                 String[] sLines = ((Sign) bClicked.getState()).getLines();
 
-                if(!operations.containsKey(sLines[0])){
+                String sOperation = getOperation(sLines[0]);
+
+                if(!operations.containsKey(sOperation)){
                     return;
                 }
 
-                if(operations.get(sLines[0]).contains(playerIsOp) && !event.getPlayer().isOp()){
-                    msg(event.getPlayer(),"This type of SignShop is OP only!");
-
-                    return;
+//op operation - prosaic, but it works and it's tidy.
+                if(operations.get(sOperation).contains(playerIsOp)){
+                    if(plugin.USE_PERMISSIONS){
+                        if(!plugin.permissionHandler.has(event.getPlayer(),"SignShop.Admin."+sOperation)){
+                            msg(event.getPlayer(),"You don't have permission to create this sign!");
+                            return;
+                        }
+                    }else{
+                        if(!event.getPlayer().isOp()){
+                            msg(event.getPlayer(),"You don't have permission to create this sign!");
+                            return;
+                        }
+                    }
+                }else{
+                    if(plugin.USE_PERMISSIONS && !plugin.permissionHandler.has(event.getPlayer(),"SignShop.Signs."+sOperation)){
+                        msg(event.getPlayer(),"You don't have permission to create this sign!");
+                        return;
+                    }
                 }
 
                 float fPrice = 0.0f;
@@ -189,12 +158,12 @@ public class SignShopPlayerListener extends PlayerListener {
                 }
 //left clicked a chest and has already clicked a sign
             }else if(event.getAction() == Action.LEFT_CLICK_BLOCK
-            && event.getClickedBlock().getType() == Material.CHEST
+            && (event.getClickedBlock().getType() == Material.CHEST || event.getClickedBlock().getType() == Material.LEVER)
             && mClicks.containsKey(event.getPlayer().getName())){
 
                 Block bSign = mClicks.get(event.getPlayer().getName()).getBlock();
 
-                String sOperation = ((Sign) bSign.getState()).getLine(0);
+                String sOperation = getOperation(((Sign) bSign.getState()).getLine(0));
                 List operation = operations.get(sOperation);
 
                 String sPrice = ((Sign) bSign.getState()).getLine(3);
@@ -205,11 +174,24 @@ public class SignShopPlayerListener extends PlayerListener {
                     return;
                 }
 
-//op operation
-                if(operations.get(sOperation).contains(playerIsOp) && !event.getPlayer().isOp()){
-                    msg(event.getPlayer(),"This type of SignShop is OP only!");
-
-                    return;
+//op operation - prosaic, but it works and it's tidy.
+                if(operation.contains(playerIsOp)){
+                    if(plugin.USE_PERMISSIONS){
+                        if(!plugin.permissionHandler.has(event.getPlayer(),"SignShop.Admin."+sOperation)){
+                            msg(event.getPlayer(),"You don't have permission to create this sign!");
+                            return;
+                        }
+                    }else{
+                        if(!event.getPlayer().isOp()){
+                            msg(event.getPlayer(),"You don't have permission to create this sign!");
+                            return;
+                        }
+                    }
+                }else{
+                    if(plugin.USE_PERMISSIONS && !plugin.permissionHandler.has(event.getPlayer(),"SignShop.Signs."+sOperation)){
+                        msg(event.getPlayer(),"You don't have permission to create this sign!");
+                        return;
+                    }
                 }
 
 //verify the price
@@ -220,6 +202,20 @@ public class SignShopPlayerListener extends PlayerListener {
                 catch(NumberFormatException nFE){}
                 if(fPrice < 0.0f){
                     fPrice = 0.0f;
+                }
+
+//take a different route for redstone
+                if(sOperation.equals("Redstone")){
+                    msg(event.getPlayer(),getMessage("setup",sOperation,"",fPrice,"",""));
+
+                    ItemStack[] kludgeItems = new ItemStack[1];
+                    kludgeItems[0] = new ItemStack(Material.AIR,1);
+
+                    plugin.Storage.addSeller(event.getPlayer().getName(),bSign,event.getClickedBlock(),kludgeItems);
+
+                    mClicks.remove(event.getPlayer().getName());
+
+                    return;
                 }
 
 //chest items
@@ -253,7 +249,7 @@ public class SignShopPlayerListener extends PlayerListener {
                 }
                 sItems = sItems.substring(0,sItems.length()-2);
 
-                msg(event.getPlayer(),this.getSetupMessage(sOperation,fPrice,sItems));
+                msg(event.getPlayer(),getMessage("setup",sOperation,sItems,fPrice,"",event.getPlayer().getName()));
 
                 plugin.Storage.addSeller(event.getPlayer().getName(),bSign,event.getClickedBlock(),isChestItems);
 
@@ -264,7 +260,7 @@ public class SignShopPlayerListener extends PlayerListener {
         }
         else if(bClicked.getType() == Material.SIGN_POST || bClicked.getType() == Material.WALL_SIGN){
             Sign sbSign = (Sign) bClicked.getState();
-            String sOperation = sbSign.getLine(0);
+            String sOperation = getOperation(sbSign.getLine(0));
 
             if(!operations.containsKey(sOperation)){
                 return;
@@ -318,25 +314,34 @@ public class SignShopPlayerListener extends PlayerListener {
             }
 
 //Make sure the items are there
-            Chest cbChest = (Chest) seller.getChest().getState();
-            ItemStack[] isChestItems = cbChest.getInventory().getContents();
-            ItemStack[] isChestItemsBackup = new ItemStack[isChestItems.length];
-            for(int i=0;i<isChestItems.length;i++){
-                if(isChestItems[i] != null){
-                    isChestItemsBackup[i] = new ItemStack(
-                        isChestItems[i].getType(),
-                        isChestItems[i].getAmount(),
-                        isChestItems[i].getDurability()
-                    );
+            Chest cbChest = null;
+            ItemStack[] isChestItems = null;
+            ItemStack[] isChestItemsBackup = null;
+            if(operation.contains(takePlayerItems)
+            || operation.contains(givePlayerItems)
+            || operation.contains(takeShopItems)
+            || operation.contains(giveShopItems)){
+                cbChest = (Chest) seller.getChest().getState();
+                isChestItems = cbChest.getInventory().getContents();
+                isChestItemsBackup = new ItemStack[isChestItems.length];
+                for(int i=0;i<isChestItems.length;i++){
+                    if(isChestItems[i] != null){
+                        isChestItemsBackup[i] = new ItemStack(
+                            isChestItems[i].getType(),
+                            isChestItems[i].getAmount(),
+                            isChestItems[i].getDurability()
+                        );
 
-                    if(isChestItems[i].getData() != null){
-                        isChestItemsBackup[i].setData(isChestItems[i].getData());
+                        if(isChestItems[i].getData() != null){
+                            isChestItemsBackup[i].setData(isChestItems[i].getData());
+                        }
                     }
                 }
             }
 
             ItemStack[] isPlayerItems = event.getPlayer().getInventory().getContents();
             ItemStack[] isPlayerItemsBackup = new ItemStack[isPlayerItems.length];
+            
             for(int i=0;i<isPlayerItems.length;i++){
                 if(isPlayerItems[i] != null){
                     isPlayerItemsBackup[i] = new ItemStack(
@@ -344,13 +349,12 @@ public class SignShopPlayerListener extends PlayerListener {
                         isPlayerItems[i].getAmount(),
                         isPlayerItems[i].getDurability()
                     );
-                    
+
                     if(isPlayerItems[i].getData() != null){
                         isPlayerItemsBackup[i].setData(isPlayerItems[i].getData());
                     }
                 }
             }
-
             HashMap<Integer,ItemStack> iiItemsLeftover;
 
             if(operation.contains(takePlayerItems)){
@@ -407,7 +411,7 @@ public class SignShopPlayerListener extends PlayerListener {
             &&(!mConfirms.containsKey(event.getPlayer().getName())
                 || mConfirms.get(event.getPlayer().getName()).getBlock() != bClicked)
             ){
-                msg(event.getPlayer(),getConfirmationMessage(sOperation,fPrice,sItems));
+                msg(event.getPlayer(),getMessage("confirm",sOperation,sItems,fPrice,event.getPlayer().getName(),seller.owner));
 
                 mConfirms.put(event.getPlayer().getName(),bClicked.getLocation());
 
@@ -443,7 +447,16 @@ public class SignShopPlayerListener extends PlayerListener {
             }
 
             if(operation.contains(activateLever)){
-                msg(event.getPlayer(),"Not finished yet, sorry!");
+                Block bLever = seller.getChest();
+
+                if(bLever.getType() == Material.LEVER){
+                    int iData = (int) bLever.getData();
+
+                    if((iData&0x08) != 0x08){
+                        iData|=0x08;//send power on
+                        bLever.setData((byte) iData);
+                    }
+                }
             }
             
             if(operation.contains(givePlayerRandomItem)){
@@ -459,8 +472,8 @@ public class SignShopPlayerListener extends PlayerListener {
                 event.getPlayer().updateInventory();
             }
 
-            msg(event.getPlayer(),getTransactionPlayerMessage(sOperation, fPrice, sItems));
-            msg(seller.owner,getTransactionOwnerMessage(sOperation, fPrice, sItems,event.getPlayer().getName()));
+            msg(event.getPlayer(),getMessage("transaction",sOperation,sItems,fPrice,event.getPlayer().getName(),seller.owner));
+            msg(seller.owner,ChatColor.GREEN+getMessage("transaction_owner",sOperation,sItems,fPrice,event.getPlayer().getName(),seller.owner));
         }
     }
 }
