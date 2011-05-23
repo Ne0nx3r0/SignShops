@@ -53,6 +53,9 @@ public class SignShopPlayerListener extends PlayerListener {
     }
 
     private String getOperation(String sSignOperation){
+        if(sSignOperation.length()<4){
+            return "";
+        }
         return sSignOperation.substring(1,sSignOperation.length()-1);
     }
 
