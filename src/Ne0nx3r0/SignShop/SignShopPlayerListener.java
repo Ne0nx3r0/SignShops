@@ -53,7 +53,7 @@ public class SignShopPlayerListener extends PlayerListener {
     }
 
     private String getOperation(String sSignOperation){
-        if(sSignOperation.length()<4){
+        if(sSignOperation.length() < 3){
             return "";
         }
         return sSignOperation.substring(1,sSignOperation.length()-1);
@@ -369,6 +369,8 @@ public class SignShopPlayerListener extends PlayerListener {
                     event.getPlayer().getInventory().setContents(isPlayerItemsBackup);
 
                     msg(event.getPlayer(),"You don't have the items! ("+sItems+")");
+
+                    event.setCancelled(true);
 
                     return;
                 }
