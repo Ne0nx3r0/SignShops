@@ -320,10 +320,21 @@ public class SignShopPlayerListener extends PlayerListener {
             Chest cbChest = null;
             ItemStack[] isChestItems = null;
             ItemStack[] isChestItemsBackup = null;
+
             if(operation.contains(takePlayerItems)
             || operation.contains(givePlayerItems)
             || operation.contains(takeShopItems)
             || operation.contains(giveShopItems)){
+                if(seller.getChest().getType() != Material.CHEST){
+                    msg(event.getPlayer(),"This shop appears to have gone out of business!");
+
+                    Location lClicked = bClicked.getLocation();
+
+                    msg(seller.owner,ChatColor.RED+"Your shop at (X:"+lClicked.getBlockX()+",Y:"+lClicked.getBlockY()+",Z:"+lClicked.getBlockZ()+") is missing it's chest!");
+                    
+                    return;
+                }
+
                 cbChest = (Chest) seller.getChest().getState();
                 isChestItems = cbChest.getInventory().getContents();
                 isChestItemsBackup = new ItemStack[isChestItems.length];
