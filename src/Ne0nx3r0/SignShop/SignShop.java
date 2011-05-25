@@ -54,13 +54,13 @@ public class SignShop extends JavaPlugin{
         this.Storage.Save();
 
         //Shop Messages
-        File fConfig = new File(this.getDataFolder(),"config.yml");
+        File fConfig = new File(this.getDataFolder(),"messages.yml");
         if(!fConfig.isFile()){
             try{
                 File jarloc = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getCanonicalFile();
                 if(jarloc.isFile()){
                     JarFile jar = new JarFile(jarloc);
-                    JarEntry entry = jar.getJarEntry("config.yml");
+                    JarEntry entry = jar.getJarEntry("messages.yml");
                     
                     if(entry != null && !entry.isDirectory()){
                         InputStream in = jar.getInputStream(entry);
@@ -74,11 +74,11 @@ public class SignShop extends JavaPlugin{
                         out.close();
                         in.close();
                         
-                        System.out.println("[SignShop] Created default config.yml");
+                        System.out.println("[SignShop] Created default messages.yml");
                     }   
                 }
             }catch (Exception e){
-                System.out.println("[SignShop] Unable to create default config.yml:" + e);
+                System.out.println("[SignShop] Unable to create default messages.yml:" + e);
             }
         }
 

@@ -1,0 +1,41 @@
+messages:
+    setup:
+        Buy: You have put !items for sale at a price of !price!
+        Sell: You have put a bounty of !price for !items!
+        Donate: You have setup a donation box for !items!
+        Slot: You have setup a !price slot machine offering !items!
+        Redstone: You have setup a redstone activator that costs !price!
+        iBuy: You have put !items infinitely for sale at a price of !price!
+        iSell: You have put an infinite bounty of !price for !items!
+        gBuy: You have setup a ghost shop selling !items for !price! (Note, you will not receive or lose money from this shop)
+        gSell: You have setup a ghost shop buying !items for !price! (Note, you will not receive or lose money from this shop)
+    confirm:
+        Buy: Buy !items for !price?
+        Sell: Sell !items for !price?
+        Donate: Donate !items?
+        Slot: Play this slot machine for !price?
+        Redstone: Activate this device for !price?
+        iBuy: Buy !items for !price?
+        iSell: Sell !items for !price?
+        gBuy: Buy !items for !price?
+        gSell: Sell !items for !price?
+    transaction:
+        Buy: You have bought !items for !price!
+        Sell: You have sold !items for !price!
+        Donate: You have donated !items!
+        Slot: You won !items!
+        Redstone: Device activated for !price!
+        iBuy: You have bought !items for !price!
+        iSell: You have sold !items for !price!
+        gBuy: You have bought !items for !price!
+        gSell: You have sold !items for !price!
+    transaction_owner:
+        Buy: \!customer bought !items for !price from you!
+        Sell: \!customer sold you !items for !price!
+        Donate: \!customer donated !items to you!
+        Slot: \!customer played a slot machine for !price and won !items!
+        Redstone: \!customer activated your redstone device for !price!
+        iBuy: \!customer bought !items for !price from your infinite store!
+        iSell: \!customer sold !items to your infinite store!
+        gBuy: \!customer bought !items from your ghost store!
+        gSell: \!customer sold !items to your ghost store!
