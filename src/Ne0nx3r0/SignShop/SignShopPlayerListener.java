@@ -238,9 +238,10 @@ public class SignShopPlayerListener extends PlayerListener {
                 if(operation.contains(takeShopItems)
                 || operation.contains(giveShopItems)
                 || operation.contains(takePlayerItems)
-                || operation.contains(givePlayerItems)){
+                || operation.contains(givePlayerItems)
+                || operation.contains(givePlayerRandomItem)){
                     if(isChestItems.length == 0){
-                        msg(event.getPlayer(),"Chest is empty!");
+                        msg(event.getPlayer(),"Shop is empty!");
                         return;
                     }
                 }
@@ -324,7 +325,8 @@ public class SignShopPlayerListener extends PlayerListener {
             if(operation.contains(takePlayerItems)
             || operation.contains(givePlayerItems)
             || operation.contains(takeShopItems)
-            || operation.contains(giveShopItems)){
+            || operation.contains(giveShopItems)
+            || operation.contains(givePlayerRandomItem)){
                 if(seller.getChest().getType() != Material.CHEST){
                     msg(event.getPlayer(),"This shop appears to have gone out of business!");
 
@@ -478,7 +480,18 @@ public class SignShopPlayerListener extends PlayerListener {
             if(operation.contains(givePlayerRandomItem)){
                 ItemStack isRandom = isItems[(new Random()).nextInt(isItems.length)];
 
-                event.getPlayer().getInventory().addItem(isRandom);
+                iiItemsLeftover = cbChest.getInventory().removeItem(isRandom);
+
+                if(!iiItemsLeftover.isEmpty()){
+                    //reset chest inventory
+                    cbChest.getInventory().setContents(isChestItemsBackup);
+
+                    msg(event.getPlayer(),"This shop is out of stock!");
+
+                    return;
+                }
+
+                event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(),isRandom);
 
                 msg(event.getPlayer(),"You got "+isRandom.getAmount()+" "+stringFormat(isRandom.getType())+"!");
             }
