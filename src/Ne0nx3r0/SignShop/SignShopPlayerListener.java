@@ -50,8 +50,8 @@ public class SignShopPlayerListener extends PlayerListener {
         operations.put("Redstone",Arrays.asList(takePlayerMoney,activateLever));
         operations.put("iSell",Arrays.asList(givePlayerMoney,takePlayerItems,playerIsOp));
         operations.put("iBuy",Arrays.asList(takePlayerMoney,givePlayerItems,playerIsOp));
-        operations.put("gBuy",Arrays.asList(takePlayerMoney,givePlayerItems,takeShopItems));
-        operations.put("gSell",Arrays.asList(givePlayerMoney,takePlayerItems,giveShopItems));
+        operations.put("gBuy",Arrays.asList(takePlayerMoney,givePlayerItems,takeShopItems,playerIsOp));
+        operations.put("gSell",Arrays.asList(givePlayerMoney,takePlayerItems,giveShopItems,playerIsOp));
     }
 
     private String getOperation(String sSignOperation){
