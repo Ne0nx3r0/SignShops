@@ -36,22 +36,38 @@ public class SignShopPlayerListener extends PlayerListener {
     private byte giveOwnerMoney = 6;
     private byte takeShopItems = 7;
     private byte giveShopItems = 8;
-    private byte activateLever = 9;
     private byte givePlayerRandomItem = 10;
     private byte playerIsOp = 11;
+    private byte setDayTime = 12;
+    private byte setNightTime = 13;
+    private byte setRaining = 14;
+    private byte setClearSkies = 16;
+    private byte setRedstoneOn = 17;
+    private byte setRedstoneOff = 18;
+    private byte setRedStoneOnTemp = 19;
+    private byte toggleRedstone = 20;
+    private byte usesChest = 21;
+    private byte usesLever = 22;
 
     public SignShopPlayerListener(SignShop instance){
         this.plugin = instance;
 
-        operations.put("Buy",Arrays.asList(takePlayerMoney,takeShopItems,giveOwnerMoney,givePlayerItems));
-        operations.put("Sell",Arrays.asList(takePlayerItems,takeOwnerMoney,giveShopItems,givePlayerMoney));
-        operations.put("Donate",Arrays.asList(takePlayerItems,giveShopItems));
-        operations.put("Slot",Arrays.asList(takePlayerMoney,giveOwnerMoney,givePlayerRandomItem));
-        operations.put("Redstone",Arrays.asList(takePlayerMoney,activateLever));
+        operations.put("Buy",Arrays.asList(takePlayerMoney,takeShopItems,giveOwnerMoney,givePlayerItems,usesChest));
+        operations.put("Sell",Arrays.asList(takePlayerItems,takeOwnerMoney,giveShopItems,givePlayerMoney,usesChest));
+        operations.put("Donate",Arrays.asList(takePlayerItems,giveShopItems,usesChest));
+        operations.put("Slot",Arrays.asList(takePlayerMoney,giveOwnerMoney,givePlayerRandomItem,usesChest));
         operations.put("iSell",Arrays.asList(givePlayerMoney,takePlayerItems,playerIsOp));
         operations.put("iBuy",Arrays.asList(takePlayerMoney,givePlayerItems,playerIsOp));
-        operations.put("gBuy",Arrays.asList(takePlayerMoney,givePlayerItems,takeShopItems,playerIsOp));
-        operations.put("gSell",Arrays.asList(givePlayerMoney,takePlayerItems,giveShopItems,playerIsOp));
+        operations.put("gBuy",Arrays.asList(takePlayerMoney,givePlayerItems,takeShopItems,playerIsOp,usesChest));
+        operations.put("gSell",Arrays.asList(givePlayerMoney,takePlayerItems,giveShopItems,playerIsOp,usesChest));
+        operations.put("Day",Arrays.asList(takePlayerMoney,setDayTime,playerIsOp));
+        operations.put("Night",Arrays.asList(takePlayerMoney,setNightTime,playerIsOp));
+        operations.put("Rain",Arrays.asList(takePlayerMoney,setRaining,playerIsOp));
+        operations.put("ClearSkies",Arrays.asList(takePlayerMoney,setClearSkies,playerIsOp));
+        operations.put("DeviceOn",Arrays.asList(takePlayerMoney,setRedstoneOn,usesLever));
+        operations.put("DeviceOff",Arrays.asList(takePlayerMoney,setRedstoneOff,usesLever));
+        operations.put("DeviceToggle",Arrays.asList(takePlayerMoney,toggleRedstone,usesLever));
+        operations.put("Device",Arrays.asList(takePlayerMoney,setRedStoneOnTemp,usesLever));
     }
 
     private String getOperation(String sSignOperation){
@@ -115,7 +131,11 @@ public class SignShopPlayerListener extends PlayerListener {
         if(event.getItem() != null && event.getItem().getType() == Material.REDSTONE){
             if(bClicked.getType() == Material.SIGN_POST
             || bClicked.getType() == Material.WALL_SIGN){
-
+                // verify this isn't a shop already
+                if(plugin.Storage.getSeller(event.getClickedBlock().getLocation()) != null){
+                    return;
+                }
+                
                 String[] sLines = ((Sign) bClicked.getState()).getLines();
 
                 String sOperation = getOperation(sLines[0]);
@@ -124,8 +144,10 @@ public class SignShopPlayerListener extends PlayerListener {
                     return;
                 }
 
+                List operation = operations.get(sOperation);
+
 //op operation - prosaic, but it works and it's tidy.
-                if(operations.get(sOperation).contains(playerIsOp)){
+                if(operation.contains(playerIsOp)){
                     if(plugin.USE_PERMISSIONS){
                         if(!plugin.permissionHandler.has(event.getPlayer(),"SignShop.Admin."+sOperation)){
                             msg(event.getPlayer(),"You don't have permission to create this sign!");
@@ -153,14 +175,18 @@ public class SignShopPlayerListener extends PlayerListener {
                     fPrice = 0.0f;
                 }
 
-                // verify this isn't a shop already
-                if(plugin.Storage.getSeller(event.getClickedBlock().getLocation()) == null){
+                //does this sign have a chest/lever counterpart?
+                if(operation.contains(usesChest) || operation.contains(usesLever)){
                     mClicks.put(event.getPlayer().getName(),event.getClickedBlock().getLocation());
 
                     msg(event.getPlayer(),"Sign location stored!");
-
-                    return;
+                }else{
+                    plugin.Storage.addSeller(event.getPlayer().getName(),event.getClickedBlock(),event.getClickedBlock(),new ItemStack[]{new ItemStack(Material.AIR,1)});
+                    
+                    msg(event.getPlayer(),getMessage("setup",sOperation,"",fPrice,"",event.getPlayer().getName()));
                 }
+
+                return;
 //left clicked a chest and has already clicked a sign
             }else if(event.getAction() == Action.LEFT_CLICK_BLOCK
             && (event.getClickedBlock().getType() == Material.CHEST || event.getClickedBlock().getType() == Material.LEVER)
@@ -209,14 +235,11 @@ public class SignShopPlayerListener extends PlayerListener {
                     fPrice = 0.0f;
                 }
 
-//take a different route for redstone
-                if(sOperation.equals("Redstone")){
+//take a different route for redstone events
+                if(operation.contains(usesLever) && event.getClickedBlock().getType() == Material.LEVER){
                     msg(event.getPlayer(),getMessage("setup",sOperation,"",fPrice,"",""));
-
-                    ItemStack[] kludgeItems = new ItemStack[1];
-                    kludgeItems[0] = new ItemStack(Material.AIR,1);
-
-                    plugin.Storage.addSeller(event.getPlayer().getName(),bSign,event.getClickedBlock(),kludgeItems);
+                    
+                    plugin.Storage.addSeller(event.getPlayer().getName(),bSign,event.getClickedBlock(),new ItemStack[]{new ItemStack(Material.AIR,1)});
 
                     mClicks.remove(event.getPlayer().getName());
 
@@ -237,11 +260,7 @@ public class SignShopPlayerListener extends PlayerListener {
                 isChestItems = tempItems.toArray(new ItemStack[tempItems.size()]);
 
 //make sure the chest wasn't empty, if dealing with an operation that uses items
-                if(operation.contains(takeShopItems)
-                || operation.contains(giveShopItems)
-                || operation.contains(takePlayerItems)
-                || operation.contains(givePlayerItems)
-                || operation.contains(givePlayerRandomItem)){
+                if(operation.contains(usesChest)){
                     if(isChestItems.length == 0){
                         msg(event.getPlayer(),"Shop is empty!");
                         return;
@@ -324,11 +343,7 @@ public class SignShopPlayerListener extends PlayerListener {
             ItemStack[] isChestItems = null;
             ItemStack[] isChestItemsBackup = null;
 
-            if(operation.contains(takePlayerItems)
-            || operation.contains(givePlayerItems)
-            || operation.contains(takeShopItems)
-            || operation.contains(giveShopItems)
-            || operation.contains(givePlayerRandomItem)){
+            if(operation.contains(usesChest)){
                 if(seller.getChest().getType() != Material.CHEST){
                     msg(event.getPlayer(),"This shop appears to have gone out of business!");
 
@@ -465,8 +480,22 @@ public class SignShopPlayerListener extends PlayerListener {
             if(operation.contains(takeShopItems)){
                 cbChest.getInventory().removeItem(isItems);
             }
-
-            if(operation.contains(activateLever)){
+            
+            if(operation.contains(setDayTime)){
+                event.getPlayer().getWorld().setTime(9000);
+            }else if(operation.contains(setNightTime)){
+                event.getPlayer().getWorld().setTime(0);
+            }
+            
+            if(operation.contains(setRaining)){
+                event.getPlayer().getWorld().setStorm(true);
+                event.getPlayer().getWorld().setThundering(true);
+            }else if(operation.contains(setClearSkies)){
+                event.getPlayer().getWorld().setStorm(false);
+                event.getPlayer().getWorld().setThundering(false);
+            }
+            
+            if(operation.contains(setRedstoneOn)){
                 Block bLever = seller.getChest();
 
                 if(bLever.getType() == Material.LEVER){
@@ -477,8 +506,46 @@ public class SignShopPlayerListener extends PlayerListener {
                         bLever.setData((byte) iData);
                     }
                 }
+            }else if(operation.contains(setRedstoneOff)){
+                Block bLever = seller.getChest();
+
+                if(bLever.getType() == Material.LEVER){
+                    int iData = (int) bLever.getData();
+
+                    if((iData&0x08) != 0x08){
+                        iData^=0x08;//send power off
+                        bLever.setData((byte) iData);
+                    }
+                }
+            }else if(operation.contains(setRedStoneOnTemp)){
+                Block bLever = seller.getChest();
+
+                if(bLever.getType() == Material.LEVER){
+                    int iData = (int) bLever.getData();
+
+                    if((iData&0x08) != 0x08){
+                        iData|=0x08;//send power on
+                        bLever.setData((byte) iData);
+                    }
+
+                    plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,new lagSetter(bLever),10*20);
+                }
+            }else if(operation.contains(toggleRedstone)){
+                Block bLever = seller.getChest();
+
+                if(bLever.getType() == Material.LEVER){
+                    int iData = (int) bLever.getData();
+
+                    if((iData&0x08) != 0x08){
+                        iData|=0x08;//send power on
+                        bLever.setData((byte) iData);
+                    }else if((iData&0x08) == 0x08){
+                        iData^=0x08;//send power off
+                        bLever.setData((byte) iData);
+                    }
+                }
             }
-            
+
             if(operation.contains(givePlayerRandomItem)){
                 ItemStack isRandom = isItems[(new Random()).nextInt(isItems.length)];
 
@@ -505,6 +572,25 @@ public class SignShopPlayerListener extends PlayerListener {
 
             msg(event.getPlayer(),getMessage("transaction",sOperation,sItems,fPrice,event.getPlayer().getName(),seller.owner));
             msg(seller.owner,ChatColor.GREEN+getMessage("transaction_owner",sOperation,sItems,fPrice,event.getPlayer().getName(),seller.owner));
+        }
+    }
+
+    private static class lagSetter implements Runnable{
+        private final Block blockToChange;
+
+        lagSetter(Block blockToChange){
+            this.blockToChange = blockToChange;
+        }
+
+        public void run(){
+            if(blockToChange.getType() == Material.LEVER){
+                int iData = (int) blockToChange.getData();
+
+                if((iData&0x08) != 0x08){
+                    iData^=0x08;//send power off
+                    blockToChange.setData((byte) iData);
+                }
+            }
         }
     }
 }

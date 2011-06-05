@@ -44,6 +44,29 @@ public class Storage{
         for(String sKey : tempSellers.keySet()){
             sSignLocation = sKey.split("/");
 
+            while(sSignLocation.length > 4){
+                sSignLocation[0] = sSignLocation[0]+"/"+sSignLocation[1];
+
+                for(int i=0;i<sSignLocation.length-1;i++){
+                    sSignLocation[i] = sSignLocation[i+1];
+                }
+            }
+
+            int iX = 0;
+            int iY = 0;
+            int iZ = 0;
+
+            try{
+                iX = Integer.parseInt(sSignLocation[1]);
+                iY = Integer.parseInt(sSignLocation[2]);
+                iZ = Integer.parseInt(sSignLocation[3]);
+            }catch(NumberFormatException nfe){
+                System.out.println("Invalid sign found at World:"+sSignLocation[0]
+                    +" X:"+sSignLocation[1]
+                    +" Y:"+sSignLocation[2]
+                    +" Z:"+sSignLocation[3]);
+            }
+
             Block bSign = Bukkit.getServer().getWorld(sSignLocation[0]).getBlockAt(
                 Integer.parseInt(sSignLocation[1]),
                 Integer.parseInt(sSignLocation[2]),
