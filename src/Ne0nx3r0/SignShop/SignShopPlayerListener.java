@@ -482,9 +482,9 @@ public class SignShopPlayerListener extends PlayerListener {
             }
             
             if(operation.contains(setDayTime)){
-                event.getPlayer().getWorld().setTime(9000);
-            }else if(operation.contains(setNightTime)){
                 event.getPlayer().getWorld().setTime(0);
+            }else if(operation.contains(setNightTime)){
+                event.getPlayer().getWorld().setTime(13000);
             }
             
             if(operation.contains(setRaining)){
