@@ -56,8 +56,8 @@ public class SignShopPlayerListener extends PlayerListener {
         operations.put("Sell",Arrays.asList(takePlayerItems,takeOwnerMoney,giveShopItems,givePlayerMoney,usesChest));
         operations.put("Donate",Arrays.asList(takePlayerItems,giveShopItems,usesChest));
         operations.put("Slot",Arrays.asList(takePlayerMoney,giveOwnerMoney,givePlayerRandomItem,usesChest));
-        operations.put("iSell",Arrays.asList(givePlayerMoney,takePlayerItems,playerIsOp));
-        operations.put("iBuy",Arrays.asList(takePlayerMoney,givePlayerItems,playerIsOp));
+        operations.put("iSell",Arrays.asList(givePlayerMoney,takePlayerItems,playerIsOp,usesChest));
+        operations.put("iBuy",Arrays.asList(takePlayerMoney,givePlayerItems,playerIsOp,usesChest));
         operations.put("gBuy",Arrays.asList(takePlayerMoney,givePlayerItems,takeShopItems,playerIsOp,usesChest));
         operations.put("gSell",Arrays.asList(givePlayerMoney,takePlayerItems,giveShopItems,playerIsOp,usesChest));
         operations.put("Day",Arrays.asList(takePlayerMoney,setDayTime,playerIsOp));
