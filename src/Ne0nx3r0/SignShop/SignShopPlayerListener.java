@@ -563,9 +563,14 @@ public class SignShopPlayerListener extends PlayerListener {
                 event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(),isRandom);
 
                 msg(event.getPlayer(),"You got "+isRandom.getAmount()+" "+stringFormat(isRandom.getType())+"!");
+
+                sItems = isRandom.getType().name().toLowerCase().replace("_"," ");
             }
 
             if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
+                if(event.getItem() != null){
+                    event.setCancelled(true);
+                }
                 //kludge
                 event.getPlayer().updateInventory();
             }

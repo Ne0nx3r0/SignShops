@@ -16,6 +16,8 @@ public class Storage{
     private static Map<Location,Seller> sellers;
 
     public Storage(File ymlFile){
+        this.sellers = new HashMap <Location,Seller>();
+
         this.yml = new Configuration(ymlFile);
         this.yml.load();
 
@@ -23,11 +25,9 @@ public class Storage{
     }
 
     public void Load(){
-        this.sellers = new HashMap<Location,Seller>();
         Map<String,Object> tempSellers = (Map<String,Object>) this.yml.getProperty("sellers");
 
         if(tempSellers == null){
-            this.sellers = new HashMap <Location,Seller>();
             return;
         }
 
@@ -110,6 +110,8 @@ public class Storage{
     }
 
     public void Save(){
+        System.out.println("[QuantumCircuits] Saving circuits...");
+
         Map<String,Object> tempSellers = new HashMap<String,Object>();
 
         Seller seller;
@@ -143,6 +145,8 @@ public class Storage{
         
         this.yml.setProperty("sellers",tempSellers);
         this.yml.save();
+
+        System.out.println("[QuantumCircuits] Circuits saved!");
     }
 
     public void addSeller(String sPlayer,Block bSign,Block bChest,ItemStack[] isItems){
