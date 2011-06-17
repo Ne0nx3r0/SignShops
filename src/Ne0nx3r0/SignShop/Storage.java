@@ -8,20 +8,50 @@ import java.util.HashMap;
 import org.bukkit.Location;
 import org.bukkit.Bukkit;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import org.bukkit.Material;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Storage{
+    private final SignShop plugin;
+
     public static Configuration yml;
 
     private static Map<Location,Seller> sellers;
 
-    public Storage(File ymlFile){
-        this.sellers = new HashMap <Location,Seller>();
+    public Storage(File ymlFile,SignShop instance){
+        plugin = instance;
 
-        this.yml = new Configuration(ymlFile);
-        this.yml.load();
+        sellers = new HashMap <Location,Seller>();
 
-        this.Load();
+        yml = new Configuration(ymlFile);
+        yml.load();
+
+// Backup sellers.yml
+        if(ymlFile.exists()){
+            File backupTo = new File(ymlFile.getPath()+".bak");
+            
+            try{
+                FileReader in = new FileReader(ymlFile);
+                FileWriter out = new FileWriter(backupTo);
+                int c;
+
+                while ((c = in.read()) != -1)
+                out.write(c);
+
+                in.close();
+                out.close();
+                
+            }catch(IOException e){
+                e.printStackTrace();
+                
+            }
+        }
+
+// Load into memory, this also removes invalid signs (hence the backup)
+        Load();
     }
 
     public void Load(){
@@ -41,7 +71,11 @@ public class Storage{
         ArrayList<Integer> amounts;
         ArrayList<String> datas;
         ArrayList<Integer> durabilities;
+        boolean invalidShop;
+        boolean needToSave = false;
         for(String sKey : tempSellers.keySet()){
+            invalidShop = false;
+            
             sSignLocation = sKey.split("/");
 
             while(sSignLocation.length > 4){
@@ -61,10 +95,17 @@ public class Storage{
                 iY = Integer.parseInt(sSignLocation[2]);
                 iZ = Integer.parseInt(sSignLocation[3]);
             }catch(NumberFormatException nfe){
-                System.out.println("Invalid sign found at World:"+sSignLocation[0]
-                    +" X:"+sSignLocation[1]
-                    +" Y:"+sSignLocation[2]
-                    +" Z:"+sSignLocation[3]);
+                invalidShop = true;//only used in the conditional below this
+
+                needToSave = true;
+            }
+
+            // wasn't sure if I could do this in the catch statement...
+            // (and you'd never really know if it wasnt working)
+            if(invalidShop){
+                plugin.log(plugin.Errors.get("shop_removed"), Level.INFO, 2);
+
+                continue;
             }
 
             Block bSign = Bukkit.getServer().getWorld(sSignLocation[0]).getBlockAt(
@@ -72,9 +113,12 @@ public class Storage{
                 Integer.parseInt(sSignLocation[2]),
                 Integer.parseInt(sSignLocation[3]));
 
+//If no longer valid, remove this sign (this would happen from worldedit, movecraft, etc)
             if(bSign.getType() != Material.SIGN_POST && bSign.getType() != Material.WALL_SIGN){
-                //if no longer valid, remove this sign
-                System.out.println("Removed invalid signshop");
+                plugin.log(plugin.Errors.get("shop_removed"), Level.INFO, 2);
+                
+                needToSave = true;
+
                 continue;
             }
 
@@ -107,10 +151,14 @@ public class Storage{
 
             this.sellers.put(lSign, new Seller((String) tempSeller.get("owner"),bChest,isItems));
         }
+
+        if(needToSave){
+            this.Save();
+        }
     }
 
     public void Save(){
-        System.out.println("[QuantumCircuits] Saving circuits...");
+        plugin.log(plugin.Errors.get("saving"), Level.INFO);
 
         Map<String,Object> tempSellers = new HashMap<String,Object>();
 
@@ -131,28 +179,29 @@ public class Storage{
             temp.put("durabilities",seller.durabilities);
 
             String[] sDatas = new String[seller.datas.length];
-            for(int i=0;i<seller.datas.length;i++){
+            for(int i = 0; i < seller.datas.length; i++){
                 if(sDatas[i] != null){
                     sDatas[i] = Byte.toString(seller.datas[i]);
                 }
             }
             temp.put("datas", sDatas);
 
-            temp.put("owner",seller.owner);
+            temp.put("owner", seller.owner);
 
-            tempSellers.put(lKey.getWorld().getName()+"/"+lKey.getBlockX()+"/"+lKey.getBlockY()+"/"+lKey.getBlockZ(),temp);
+            tempSellers.put(lKey.getWorld().getName()
+                    + "/" + lKey.getBlockX()
+                    + "/" + lKey.getBlockY()
+                    + "/" + lKey.getBlockZ(),temp);
         }
         
-        this.yml.setProperty("sellers",tempSellers);
+        this.yml.setProperty("sellers", tempSellers);
         this.yml.save();
 
-        System.out.println("[QuantumCircuits] Circuits saved!");
+        plugin.log(plugin.Errors.get("saved"), Level.INFO);
     }
 
-    public void addSeller(String sPlayer,Block bSign,Block bChest,ItemStack[] isItems){
-        this.sellers.put(bSign.getLocation(), new Seller(sPlayer,bChest,isItems));
-        
-        this.Save();
+    public void addSeller(String sPlayer, Block bSign, Block bChest, ItemStack[] isItems){
+        this.sellers.put(bSign.getLocation(), new Seller(sPlayer, bChest, isItems));
     }
 
     public Seller getSeller(Location lKey){
@@ -165,8 +214,6 @@ public class Storage{
     public void removeSeller(Location lKey){
         if(this.sellers.containsKey(lKey)){
             this.sellers.remove(lKey);
-        
-            this.Save();
         }
     }
 }
