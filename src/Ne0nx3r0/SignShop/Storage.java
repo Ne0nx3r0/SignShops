@@ -28,7 +28,7 @@ public class Storage{
 
         yml = new Configuration(ymlFile);
         yml.load();
-
+//TODO: Only back up sellers.yml when there has been a change from Load().
 // Backup sellers.yml
         if(ymlFile.exists()){
             File backupTo = new File(ymlFile.getPath()+".bak");

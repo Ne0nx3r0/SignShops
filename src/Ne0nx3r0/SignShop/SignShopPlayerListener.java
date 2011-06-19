@@ -20,7 +20,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.block.Action;
 import java.util.Random;
 
-public class SignShopPlayerListener extends PlayerListener {
+//TODO: copy durability of tools over when buying/selling items. 
+
+public class SignShopPlayerListener extends PlayerListener{
     private final SignShop plugin;
     private static Map<String, Location> mClicks  = new HashMap<String,Location>();
     private static Map<String,Location> mConfirms = new HashMap<String,Location>();
@@ -132,8 +134,7 @@ public class SignShopPlayerListener extends PlayerListener {
                     return;
                 }
                
-//TODO: auto set operation names to title case to avoid case issues
-//TODO: save operation with signs to avoid sign changing issues
+//TODO: save the sign operation with signs to avoid sign changing issues
                 String[] sLines = ((Sign) bClicked.getState()).getLines();
                 String sOperation = getOperation(sLines[0]);
 

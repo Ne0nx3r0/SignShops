@@ -57,16 +57,21 @@ public class SignShop extends JavaPlugin{
     }
 
     public void onEnable(){
-//Enable logger
+// Enable logger
         Logger = Logger.getLogger("Minecraft");
         
-//Register events
+// Register events
         PluginManager pm = getServer().getPluginManager();
         pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
         pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Low, this);
         pm.registerEvent(Event.Type.BLOCK_BURN, blockListener, Priority.Low, this);
 
-//Load the config file
+// Ensure the plugin directory exists
+        if(!this.getDataFolder().exists()){
+            this.getDataFolder().mkdir();
+        }
+
+// Load the config file
         File fConfig = new File(this.getDataFolder(),"config.yml");
         if(!fConfig.isFile()){
             try{

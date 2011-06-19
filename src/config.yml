@@ -37,8 +37,8 @@ autosave_minutes: 10
 # ----------------------------------------
 
 # You can change the sign names, but don't use a sign name longer than 14 characters.
-# Note - If for example you remove Buy, then ALL buy signs will be removed! Keep this in mind!
-# Note 2 - If you add a new sign, make sure you add the messages below!
+# Note - If for example you remove or rename Buy, then ALL Buy signs will be removed! Keep this in mind!
+# Note 2 - If you add a new sign, make sure you add the messages below as well!
 signs:
     Buy: takePlayerMoney,takeShopItems,giveOwnerMoney,givePlayerItems
     Sell: takePlayerItems,takeOwnerMoney,giveShopItems,givePlayerMoney
