@@ -62,9 +62,9 @@ public class SignShop extends JavaPlugin{
         
 // Register events
         PluginManager pm = getServer().getPluginManager();
-        pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
-        pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Low, this);
-        pm.registerEvent(Event.Type.BLOCK_BURN, blockListener, Priority.Low, this);
+        pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Highest, this);
+        pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Normal, this);
+        pm.registerEvent(Event.Type.BLOCK_BURN, blockListener, Priority.Normal, this);
 
 // Ensure the plugin directory exists
         if(!this.getDataFolder().exists()){
